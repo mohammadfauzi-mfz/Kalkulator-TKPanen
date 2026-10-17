@@ -8,7 +8,6 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import id.dsngroup.kalkulatortkpanen.R
 
 class MainActivity : AppCompatActivity() {
 
@@ -20,8 +19,10 @@ class MainActivity : AppCompatActivity() {
             val totalPokok = result.data?.getIntExtra("TOTAL_POKOK", 0) ?: 0
             val totalJanjang = result.data?.getIntExtra("TOTAL_JANJANG", 0) ?: 0
 
-            val etAkp = findViewById<EditText>(R.id.etAkp)
-            etAkp?.setText(String.format("%.2f", percentAkp))
+            val etAkpId = resources.getIdentifier("etAkp", "id", packageName)
+            if (etAkpId != 0) {
+                findViewById<EditText>(etAkpId)?.setText(String.format("%.2f", percentAkp))
+            }
 
             Toast.makeText(
                 this,
@@ -35,10 +36,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val btnStartTracking = findViewById<Button>(R.id.btnStartTracking)
-        btnStartTracking?.setOnClickListener {
-            val intent = Intent(this, SensusActivity::class.java)
-            sensusLauncher.launch(intent)
+        val btnStartTrackingId = resources.getIdentifier("btnStartTracking", "id", packageName)
+        if (btnStartTrackingId != 0) {
+            findViewById<Button>(btnStartTrackingId)?.setOnClickListener {
+                val intent = Intent(this, SensusActivity::class.java)
+                sensusLauncher.launch(intent)
+            }
         }
     }
 }
