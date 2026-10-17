@@ -64,7 +64,7 @@ class AboutActivity : AppCompatActivity() {
         root.addView(body)
 
         root.addView(TextView(this).apply {
-            text = "Versi Aplikasi 1.1"; textSize = 13f
+            text = "Versi Aplikasi 1.2"; textSize = 13f
             setTextColor(0xFF666666.toInt()); gravity = Gravity.CENTER
             setPadding(0, dp(12), 0, dp(20))
         })

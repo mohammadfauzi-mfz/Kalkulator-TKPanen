@@ -12,7 +12,7 @@ import java.util.Locale
 import kotlin.math.ceil
 
 /** Satu catatan riwayat: tanggal (dd/MM/yyyy, diketik manual) + semua isian kalkulator. */
-data class Entri(val id: Long, val tanggal: String, val input: Input)
+data class Entri(val id: Long, val tanggal: String, val input: Input, val trackId: String = "")
 
 object Fmt {
     private val idn = Locale("in", "ID")
@@ -29,6 +29,13 @@ object Fmt {
         if (v.isNaN() || v.isInfinite()) "#DIV/0!"
         else "${n(v, 2)} Orang" + if (v > 0) "  (≈ ${ceil(v - 1e-9).toLong()})" else ""
 
+    /** Koordinat "lat,lon" 6 desimal (mudah disalin ke CarryMap / Google Maps). */
+    fun koordinat(lat: Double, lon: Double): String = String.format(Locale.US, "%.6f,%.6f", lat, lon)
+
+    fun mapsUrl(lat: Double, lon: Double): String = "https://www.google.com/maps?q=" + koordinat(lat, lon)
+
+    fun tgljam(t: Long): String = SimpleDateFormat("dd/MM/yyyy HH:mm", idn).format(Date(t))
+
     fun hariIni(): String = SimpleDateFormat("dd/MM/yyyy", idn).format(Date())
 
     /** true jika berformat dd/MM/yyyy dan tanggalnya nyata. */
@@ -39,7 +46,7 @@ object Fmt {
     } catch (e: Exception) { false }
 
     /** Teks laporan untuk WhatsApp. */
-    fun pesan(e: Entri): String {
+    fun pesan(e: Entri, track: TrackRecord? = null): String {
         val i = e.input
         val h = Calculator.hitung(i)
         return buildString {
@@ -65,6 +72,15 @@ object Fmt {
             append("*Kebutuhan TK Gandeng*\n")
             append("By Luasan : ${orang(h.kebGandengLuasan)}\n")
             append("By Produksi : ${orang(h.kebGandengProduksi)}")
+            if (track != null) {
+                append("\n\n*Bukti Tracking Pengambilan %AKP*\n")
+                if (track.blok.isNotBlank()) append("Blok : ${track.blok}\n")
+                append("Mulai : ${tgljam(track.startedAt)}\n")
+                append("Durasi : ${track.minutes} menit\n")
+                append("Jarak : ${Geo.km(track.distance)}\n")
+                append("Titik : ${track.points.size}")
+                track.points.firstOrNull()?.let { append("\nLokasi awal : ${mapsUrl(it.lat, it.lon)}") }
+            }
         }
     }
 
@@ -102,7 +118,8 @@ object RiwayatStore {
                     tkTersedia = o.optDouble("tk", d.tkTersedia),
                     gandengHaPerHk = o.optDouble("gHaHk", d.gandengHaPerHk),
                     gandengTonPerHk = o.optDouble("gTonHk", d.gandengTonPerHk),
-                )
+                ),
+                o.optString("trk"),
             ))
         }
         return out
@@ -114,7 +131,8 @@ object RiwayatStore {
             .put("id", e.id).put("tgl", e.tanggal)
             .put("akp", e.input.akp).put("luas", e.input.luas).put("sph", e.input.sph).put("bjr", e.input.bjr)
             .put("haHk", e.input.haPerHk).put("tonHk", e.input.tonPerHk).put("tk", e.input.tkTersedia)
-            .put("gHaHk", e.input.gandengHaPerHk).put("gTonHk", e.input.gandengTonPerHk))
+            .put("gHaHk", e.input.gandengHaPerHk).put("gTonHk", e.input.gandengTonPerHk)
+            .put("trk", e.trackId))
         prefs(c).edit().putString(KEY, arr.toString()).apply()
     }
 
