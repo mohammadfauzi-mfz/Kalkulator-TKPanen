@@ -10,9 +10,9 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import id.dsngroup.kalkulatortkpanen.R
 
 data class PokokAkp(
     val noPokok: Int,
@@ -29,6 +29,7 @@ class SensusActivity : AppCompatActivity(), SensorEventListener {
     private lateinit var tvGpsLuxInfo: TextView
     private lateinit var etJanjang: EditText
     private lateinit var etKeteranganFoto: EditText
+    private lateinit var btnAmbilFoto: Button
     private lateinit var btnNext: Button
     private lateinit var btnFinish: Button
 
@@ -50,6 +51,7 @@ class SensusActivity : AppCompatActivity(), SensorEventListener {
         tvGpsLuxInfo = findViewById(R.id.tvGpsLuxInfo)
         etJanjang = findViewById(R.id.etJanjang)
         etKeteranganFoto = findViewById(R.id.etKeteranganFoto)
+        btnAmbilFoto = findViewById(R.id.btnAmbilFoto)
         btnNext = findViewById(R.id.btnNext)
         btnFinish = findViewById(R.id.btnFinish)
 
@@ -57,6 +59,10 @@ class SensusActivity : AppCompatActivity(), SensorEventListener {
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
 
         updatePokokUi()
+
+        btnAmbilFoto.setOnClickListener {
+            Toast.makeText(this, "Fitur kamera siap digunakan", Toast.LENGTH_SHORT).show()
+        }
 
         btnNext.setOnClickListener {
             saveCurrentPokok()
@@ -73,7 +79,10 @@ class SensusActivity : AppCompatActivity(), SensorEventListener {
 
     private fun updatePokokUi() {
         tvPokokHeader.text = "Pokok No. $currentPokokNo"
-        tvGpsLuxInfo.text = String.format("📍 %.6f, %.6f (±3.3 m)\n☀️ %.1f lux\nKoordinat & lux terus diperbarui. Nilai akhir diambil saat menekan NEXT / FINISH.", currentLat, currentLng, currentLux)
+        tvGpsLuxInfo.text = String.format(
+            "📍 %.6f, %.6f (±3.3 m)\n☀️ %.1f lux\nKoordinat & lux terus diperbarui. Nilai akhir diambil saat menekan NEXT / FINISH.",
+            currentLat, currentLng, currentLux
+        )
     }
 
     private fun saveCurrentPokok() {
