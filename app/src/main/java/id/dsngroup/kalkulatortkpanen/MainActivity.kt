@@ -8,10 +8,10 @@ import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import id.dsngroup.kalkulatortkpanen.R
 
 class MainActivity : AppCompatActivity() {
 
-    // Launcher untuk menerima hasil nilai %AKP dari SensusActivity
     private val sensusLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -20,14 +20,12 @@ class MainActivity : AppCompatActivity() {
             val totalPokok = result.data?.getIntExtra("TOTAL_POKOK", 0) ?: 0
             val totalJanjang = result.data?.getIntExtra("TOTAL_JANJANG", 0) ?: 0
 
-            // Mencari input AKP di layout jika ada
-            findViewById<EditText>(resources.getIdentifier("etAkp", "id", packageName))?.setText(
-                String.format("%.2f", percentAkp)
-            )
+            val etAkp = findViewById<EditText>(R.id.etAkp)
+            etAkp?.setText(String.format("%.2f", percentAkp))
 
             Toast.makeText(
                 this,
-                "Sensus selesai! Total $totalPokok pokok, $totalJanjang janjang matang. %AKP: ${String.format("%.2f", percentAkp)}%",
+                "Sensus selesai! Total $totalPokok pokok, $totalJanjang janjang. %AKP: ${String.format("%.2f", percentAkp)}%",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -37,16 +35,10 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Tombol Start Tracking untuk membuka SensusActivity
-        findViewById<Button>(resources.getIdentifier("btnStartTracking", "id", packageName))?.setOnClickListener {
+        val btnStartTracking = findViewById<Button>(R.id.btnStartTracking)
+        btnStartTracking?.setOnClickListener {
             val intent = Intent(this, SensusActivity::class.java)
             sensusLauncher.launch(intent)
-        } ?: run {
-            // Jika ID tombol khusus tidak ditemukan, cari tombol utama pertama di layout
-            findViewById<Button>(android.R.id.button1)?.setOnClickListener {
-                val intent = Intent(this, SensusActivity::class.java)
-                sensusLauncher.launch(intent)
-            }
         }
     }
 }
