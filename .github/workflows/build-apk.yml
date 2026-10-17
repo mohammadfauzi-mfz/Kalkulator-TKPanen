@@ -17,6 +17,15 @@ jobs:
         with:
           gradle-version: 8.9
       - run: gradle assembleDebug --no-daemon
+      - name: Unit test (tidak menggagalkan build APK)
+        continue-on-error: true
+        run: gradle testDebugUnitTest --no-daemon
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: laporan-test
+          path: app/build/reports/tests/testDebugUnitTest
+          if-no-files-found: ignore
       - uses: actions/upload-artifact@v4
         with:
           name: KalkulatorTKPanen-APK
