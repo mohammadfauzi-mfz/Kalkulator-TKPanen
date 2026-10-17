@@ -16,7 +16,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Card Pokok -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -62,7 +61,6 @@
                     android:padding="12dp" />
             </LinearLayout>
 
-            <!-- Card Foto -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -108,7 +106,6 @@
         </LinearLayout>
     </ScrollView>
 
-    <!-- Tombol Bawah (FINISH & NEXT) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
