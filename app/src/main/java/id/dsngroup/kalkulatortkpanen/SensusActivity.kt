@@ -12,6 +12,7 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import id.dsngroup.kalkulatortkpanen.R
 
 data class PokokAkp(
     val noPokok: Int,
@@ -43,23 +44,14 @@ class SensusActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Memastikan layout dipasang dengan benar
-        val layoutId = resources.getIdentifier("activity_sensus", "layout", packageName)
-        if (layoutId != 0) {
-            setContentView(layoutId)
-        } else {
-            finish()
-            return
-        }
+        setContentView(R.layout.activity_sensus)
 
-        // Menghubungkan ID dari layout secara aman
-        tvPokokHeader = findViewById(resources.getIdentifier("tvPokokHeader", "id", packageName))
-        tvGpsLuxInfo = findViewById(resources.getIdentifier("tvGpsLuxInfo", "id", packageName))
-        etJanjang = findViewById(resources.getIdentifier("etJanjang", "id", packageName))
-        etKeteranganFoto = findViewById(resources.getIdentifier("etKeteranganFoto", "id", packageName))
-        btnNext = findViewById(resources.getIdentifier("btnNext", "id", packageName))
-        btnFinish = findViewById(resources.getIdentifier("btnFinish", "id", packageName))
+        tvPokokHeader = findViewById(R.id.tvPokokHeader)
+        tvGpsLuxInfo = findViewById(R.id.tvGpsLuxInfo)
+        etJanjang = findViewById(R.id.etJanjang)
+        etKeteranganFoto = findViewById(R.id.etKeteranganFoto)
+        btnNext = findViewById(R.id.btnNext)
+        btnFinish = findViewById(R.id.btnFinish)
 
         sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
