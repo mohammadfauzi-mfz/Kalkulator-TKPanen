@@ -34,8 +34,7 @@ import java.util.Date
 import java.util.Locale
 
 interface PetaHost {
-    fun toggleTracking()
-    fun togglePause()
+    fun startSensus()
     fun hasLocationPermission(): Boolean
     fun requestLocationPermission()
     fun importMap()
@@ -63,7 +62,6 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
     private val tvInfo = TextView(context)
     private lateinit var btnMap: MaterialButton
     private lateinit var btnTrack: MaterialButton
-    private lateinit var btnPause: MaterialButton
     private val barNormal = LinearLayout(context)
     private val barMeasure = LinearLayout(context)
     private var curMap: MapInfo? = null
@@ -214,10 +212,6 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
     private val tick = object : Runnable {
         override fun run() {
             if (!shown) return
-            canvas.setLive(if (Tracker.active) Tracker.snapshot() else emptyList())
-            btnTrack.text = if (Tracker.active) "■ Stop" else "● Tracking"
-            btnPause.visibility = if (Tracker.active) View.VISIBLE else View.GONE
-            btnPause.text = if (Tracker.paused) "▶ Lanjut" else "⏸ Pause"
             updateInfo()
             handler.postDelayed(this, 1000)
         }
@@ -312,12 +306,9 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
 
         barNormal.orientation = HORIZONTAL
         barNormal.setPadding(dp(4), dp(4), dp(4), dp(4))
-        btnTrack = btn("● Tracking", true) { host.toggleTracking() }
+        btnTrack = btn("● Sensus AKP", true) { host.startSensus() }
         btnTrack.backgroundTintList = android.content.res.ColorStateList.valueOf(0xFFD32F2F.toInt())
         barNormal.addView(btnTrack)
-        btnPause = btn("⏸ Pause") { host.togglePause() }
-        btnPause.visibility = View.GONE
-        barNormal.addView(btnPause)
         barNormal.addView(btn("📏 Ukur") { pilihUkur() })
         barNormal.addView(btn("⋯ Lainnya") { menuLainnya() })
         mapPane.addView(barNormal)
@@ -449,7 +440,6 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
         canvas.setHistory(TrackStore.all(context).filter { r ->
             r.points.isNotEmpty() && m.contains(r.points[r.points.size / 2].lat, r.points[r.points.size / 2].lon)
         }.map { it.points })
-        canvas.setLive(if (Tracker.active) Tracker.snapshot() else emptyList())
     }
 
     private fun pilihPeta() {
@@ -523,10 +513,6 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
                 val m = curMap
                 if (m != null && m.id != "plain" && !m.contains(l.latitude, l.longitude)) sb.append("\n⚠ Posisi di luar peta ini")
             }
-        }
-        if (Tracker.active) {
-            val p = Tracker.snapshot()
-            sb.append(if (Tracker.paused) "\n⏸ Tracking DIJEDA: " else "\n● Tracking: ").append(p.size).append(" titik • ").append(Geo.meter(Geo.length(p)))
         }
         val s = selected
         if (canvas.mode == MapCanvasView.Mode.NORMAL) {
@@ -753,11 +739,14 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
             .setItems(maps.map { it.name }.toTypedArray()) { _, i -> kirim(maps[i]) }.show()
     }
 
-    private fun judul(r: TrackRecord) = "Tracking ${if (r.blok.isNotBlank()) "Blok " + r.blok else ""}".trim()
+    private fun judul(r: TrackRecord) =
+        (if (r.isSensus) "Sensus AKP " else "Tracking ") + (if (r.blok.isNotBlank()) "Blok " + r.blok else "").trim()
 
     private fun ringkas(r: TrackRecord): String {
         val tgl = SimpleDateFormat("dd MMM yyyy HH:mm", idn).format(Date(r.startedAt))
         val mnt = r.minutes
+        if (r.isSensus) return "$tgl" + (if (r.petugas.isNotBlank()) " • ${r.petugas}" else "") +
+            "\n${r.jumlahPokok} pokok • ${r.jumlahJjg} janjang • %AKP ${Fmt.n(r.akpPersen, 2)}%"
         return "$tgl\nJarak ${Geo.km(r.distance)} • $mnt menit • ${r.points.size} titik"
     }
 
@@ -766,7 +755,7 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
         val items = TrackStore.all(context)
         if (items.isEmpty()) {
             historyList.addView(TextView(context).apply {
-                text = "Belum ada riwayat tracking.\nTekan tombol merah \"Tracking\" di tab Peta atau \"Start Tracking\" di tab Kalkulator."
+                text = "Belum ada riwayat sensus.\nTekan tombol merah \"Sensus AKP\" di tab Peta atau \"Mulai Sensus AKP\" di tab Kalkulator."
                 textSize = 14f
                 gravity = Gravity.CENTER
                 setPadding(0, dp(48), 0, 0)
@@ -800,7 +789,7 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
         }
         col.addView(iv)
         Thread {
-            val bmp = try { TrackRender.render(context, MapStore.get(context, r.mapId), r.points, 640, 300) } catch (e: Throwable) { null }
+            val bmp = try { TrackRender.render(context, MapStore.get(context, r.mapId), r.points, 640, 300, null, r.isSensus) } catch (e: Throwable) { null }
             iv.post { if (iv.tag == r.id && bmp != null) iv.setImageBitmap(bmp) }
         }.start()
         val row = LinearLayout(context).apply { orientation = HORIZONTAL; setPadding(0, dp(6), 0, 0) }
@@ -830,7 +819,7 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
             setBackgroundColor(0xFFDDE8DD.toInt())
             minimumHeight = dp(260)
         }
-        val luas = if (r.points.size >= 3) "\nPerkiraan luas jika jalur ditutup: " + Geo.luas(Geo.areaM2(r.points)) else ""
+        val luas = if (!r.isSensus && r.points.size >= 3) "\nPerkiraan luas jika jalur ditutup: " + Geo.luas(Geo.areaM2(r.points)) else ""
         val d = MaterialAlertDialogBuilder(context)
             .setTitle(judul(r))
             .setMessage(ringkas(r) + luas)
@@ -842,7 +831,7 @@ class PetaView(context: Context, private val host: PetaHost) : LinearLayout(cont
         var shownBmp: Bitmap? = null
         Thread {
             val bmp = try {
-                TrackRender.render(context, MapStore.get(context, r.mapId), r.points, 1280, 900, "${judul(r)} • ${Geo.km(r.distance)}")
+                TrackRender.render(context, MapStore.get(context, r.mapId), r.points, 1280, 900, "${judul(r)} • " + (if (r.isSensus) "${r.jumlahPokok} pokok • %AKP ${Fmt.n(r.akpPersen, 2)}%" else Geo.km(r.distance)), r.isSensus)
             } catch (e: Throwable) { null }
             iv.post { shownBmp = bmp; if (bmp != null) iv.setImageBitmap(bmp) }
         }.start()

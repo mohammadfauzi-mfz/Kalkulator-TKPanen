@@ -57,7 +57,7 @@ object CrashLog {
         val rt = Runtime.getRuntime()
         sb.append("Memori  : ").append((rt.totalMemory() - rt.freeMemory()) / 1048576).append(" MB terpakai dari maks ")
             .append(rt.maxMemory() / 1048576).append(" MB\n")
-        sb.append("Tracking: ").append(if (Tracker.active) "aktif" else "tidak aktif").append("\n\n")
+        sb.append("Sensus aktif: ").append(if (Sensus.aktif(ctx) != null) "ya" else "tidak").append("\n\n")
         sb.append(sw.toString())
         synchronized(lock) {
             val d = dir(ctx)

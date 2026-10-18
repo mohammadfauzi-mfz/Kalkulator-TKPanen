@@ -26,6 +26,7 @@ object TrackRender {
         w: Int,
         h: Int,
         title: String? = null,
+        dots: Boolean = false,      // true: gambar setiap titik (pokok sensus)
     ): Bitmap {
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
@@ -92,6 +93,18 @@ object TrackRender {
             strokeCap = Paint.Cap.ROUND
         }
         c.drawPath(path, line)
+        if (dots) {
+            val dp2 = Paint(Paint.ANTI_ALIAS_FLAG)
+            val r0 = max(6f, w * 0.0075f)
+            for (i in 0 until n) {
+                val ox = ((xs[i] - left) / s).toFloat()
+                val oy = ((ys[i] - top) / s).toFloat()
+                dp2.color = Color.WHITE
+                c.drawCircle(ox, oy, r0 + 2f, dp2)
+                dp2.color = 0xFFE53935.toInt()
+                c.drawCircle(ox, oy, r0, dp2)
+            }
+        }
         // titik awal (hijau) dan akhir (biru)
         val dot = Paint(Paint.ANTI_ALIAS_FLAG)
         val rr = sw * 1.9f

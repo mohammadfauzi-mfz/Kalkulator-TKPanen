@@ -72,7 +72,17 @@ object Fmt {
             append("*Kebutuhan TK Gandeng*\n")
             append("By Luasan : ${orang(h.kebGandengLuasan)}\n")
             append("By Produksi : ${orang(h.kebGandengProduksi)}")
-            if (track != null) {
+            if (track != null && track.isSensus) {
+                append("\n\n*Bukti Sensus %AKP per Pokok*\n")
+                if (track.blok.isNotBlank()) append("Blok : ${track.blok}\n")
+                if (track.petugas.isNotBlank()) append("Petugas : ${track.petugas}\n")
+                append("Mulai : ${tgljam(track.startedAt)}\n")
+                append("Jumlah Pokok : ${track.jumlahPokok}\n")
+                append("Jumlah Janjang : ${track.jumlahJjg}\n")
+                append("%AKP : ${n(track.akpPersen, 2)}% (janjang matang / pokok)")
+                track.pokok.firstOrNull()?.let { append("\nPokok No. ${it.no} : ${mapsUrl(it.lat, it.lon)}") }
+                track.pokok.lastOrNull()?.takeIf { track.pokok.size > 1 }?.let { append("\nPokok No. ${it.no} : ${mapsUrl(it.lat, it.lon)}") }
+            } else if (track != null) {
                 append("\n\n*Bukti Tracking Pengambilan %AKP*\n")
                 if (track.blok.isNotBlank()) append("Blok : ${track.blok}\n")
                 append("Mulai : ${tgljam(track.startedAt)}\n")
